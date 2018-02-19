@@ -1,3 +1,5 @@
+import '../style/style.css'
+
 function createNews(article) {
     function createElements() {
         var entry = document.createElement("figure");
