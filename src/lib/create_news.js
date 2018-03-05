@@ -1,27 +1,33 @@
 export { createNews };
 
-function createNews(article) {
-    function createElements() {
-        var entry = document.createElement("figure");
-        entry.className = "news";
+function ElementsFactory(article) {
+    this.createElement = function (type) {
+        let element;
+ 
+        if (type === "entry") {
+            element = document.createElement("figure");
+            element.className = "news";
+        } else if (type === "header") {
+            element = document.createElement("h2");
+        } else if (type === "link") {
+            element = document.createElement("a");
+            element.href = article.url;
+            element.textContent = article.title;
+        } else if (type === "image") {
+            element = document.createElement("img");
+            element.src = article.urlToImage;
+            element.alt = article.title;
+        } else if (type === "description") {
+            element = document.createElement("figcaption");
+            element.className = "caption";
+            element.textContent = article.description;
+        }
 
-        var header = document.createElement("h2");
-
-        var link = document.createElement("a");
-        link.href = article.url;
-        link.textContent = article.title;
-
-        var image = document.createElement("img");
-        image.src = article.urlToImage;
-        image.alt = article.title;
-
-        var description = document.createElement("figcaption");
-        description.className = "caption";
-        description.textContent = article.description;
-
-        return { header, link, entry, image, description };
+        return element;
     }
+}
 
+function createNews(article) {
     function addChildren() {
         header.appendChild(link);
         entry.appendChild(header);
@@ -30,7 +36,14 @@ function createNews(article) {
         document.body.appendChild(entry);
     }
 
-    var { header, link, entry, image, description } = createElements();
+    let elementsFactory = new ElementsFactory(article)
+
+    let header = elementsFactory.createElement("header")
+    let link = elementsFactory.createElement("link")
+    let entry = elementsFactory.createElement("entry")
+    let image = elementsFactory.createElement("image")
+    let description = elementsFactory.createElement("description")
 
     addChildren();
 }
+
