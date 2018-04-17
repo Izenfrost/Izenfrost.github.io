@@ -1,4 +1,5 @@
 const express = require('express');
+const PORT = process.env.PORT || 5000
 const winston = require('winston');
 const app = express();
 const levels = { 
@@ -54,4 +55,4 @@ app.use(function(req, res) {
     res.render('welcome_page', error);
 });
 
-app.listen(8000, () => console.log('Listening app on port 8000'));
+app.listen(PORT, () => console.log('Listening app on port ' + PORT));
