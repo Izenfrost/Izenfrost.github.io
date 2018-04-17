@@ -11,6 +11,21 @@ app.get('/blogs/:id', function(req, res) {
     res.json(article);
 });
 
+app.post('/blogs', function(req, res) {
+    const article = {title: 'Title successful created', body: 'Body successful created' };
+    res.json(article);
+});
+
+app.put('/blogs/:id', function(req, res) {
+    const article = {title: 'Title successful updated', body: 'Body successful updated' };
+    res.json(article);
+});
+
+app.delete('/blogs/:id', function(req, res) {
+    const article = {title: 'Title successful deleted', body: 'Body successful deleted' };
+    res.json(article);
+});
+
 app.use(function(req, res) {
     console.log('Error route: ' + req.originalUrl);
     const error = { title: 'No route matches', description: 'No route matches for ' + req.originalUrl };
