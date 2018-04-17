@@ -4,7 +4,7 @@
   "description": "nodejs_homework",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
     "production": "node app.js",
     "development": "nodemon"
   },
