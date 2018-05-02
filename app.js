@@ -1,58 +1,66 @@
 const express = require('express');
-const PORT = process.env.PORT || 5000
-const winston = require('winston');
+const path = require('path');
+const bodyParser = require('body-parser');
+const db = require('./config/db');
+const logger = require('./logger');
+
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const session = require('express-session');
 const app = express();
-const levels = { 
-    error: 0, 
-    info: 1
-}
-const logger = winston.createLogger({
-    transports: [
-      new winston.transports.Console(),
-      new winston.transports.File({ filename: 'combined.log' })
-    ]
-});
 
-var current_time = () => new Date().toString();
+const PORT = process.env.PORT || 5000;
 
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+app.use(bodyParser.json());
 
-app.set('view engine', 'pug')
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static(path.join(__dirname, 'public')));
+app.set('view engine', 'pug');
 
-app.get('/blogs', function(req, res) {
-    logger.info(current_time() + ' GET request to: ' + req.originalUrl);
-    const articles = [{title: 'First title', body: 'First body' }, {title: 'Second title', body: 'Second title' }];
-    res.json(articles);
-});
+app.use(require('express-session')({
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
-app.get('/blogs/:id', function(req, res) {
-    logger.info(current_time() + ' GET request to: ' + req.originalUrl);
-    const article = {title: 'First title', body: 'First body' };
-    res.json(article);
-});
+const User = require('./models/user.js');
+passport.use(User.createStrategy());
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
-app.post('/blogs', function(req, res) {
-    logger.info(current_time() + ' POST request to: ' + req.originalUrl);
-    const article = {title: 'Title successful created', body: 'Body successful created' };
-    res.json(article);
-});
+const auth = require('./routes/auth')
+app.use('/', auth)
 
-app.put('/blogs/:id', function(req, res) {
-    logger.info(current_time() + ' PUT request to: ' + req.originalUrl);
-    const article = {title: 'Title successful updated', body: 'Body successful updated' };
-    res.json(article);
-});
-
-app.delete('/blogs/:id', function(req, res) {
-    logger.info(current_time() + ' DELETE request to: ' + req.originalUrl);
-    const article = {title: 'Title successful deleted', body: 'Body successful deleted' };
-    res.json(article);
-});
+const Post = require('./models/post.js');
+const posts = require('./routes/posts');
+app.use('/posts', isLoggedIn, posts);
 
 app.use(function(req, res) {
-    console.log('Invalid route: ' + req.originalUrl);
-    logger.error(current_time() + ' Invalid route: ' + req.originalUrl);
-    const error = { title: 'Invalid route', message: 'No route matches for ' + req.originalUrl };
-    res.render('welcome_page', error);
+    res.render('not_found', { message: 'Route not found for ' + req.originalUrl });
 });
 
-app.listen(PORT, () => console.log('Listening app on port ' + PORT));
+app.use(function(err, req, res, next) {
+    console.error(err.stack);
+    res.status(500).send(err);
+});
+
+app.use(function(req, res, next) {
+    logger.log('info', 'URL:', req.originalUrl, 'METHOD:', req.method, 'BODY:', req.body);
+    next();
+});
+
+app.listen(PORT, function() {
+    console.log('Listening app on port ' + PORT);
+});
+
+function isLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect('/');
+}
